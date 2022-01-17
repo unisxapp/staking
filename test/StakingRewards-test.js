@@ -3,6 +3,7 @@ const { ethers } = require("hardhat");
 
 describe("StakingRewards", function () {
 
+  const UNISX_Supply = 10n ** (18n /*decimals*/ + 6n /* 1 million */)
   const REWARD_RATE = 2
 
   let admin, staker
@@ -21,10 +22,10 @@ describe("StakingRewards", function () {
     /* Deploy contracts */
 
     const StakingRewardsContract = await ethers.getContractFactory("StakingRewards")
-    const UNISXContract = await ethers.getContractFactory("TestUNISX")
+    const UNISXContract = await ethers.getContractFactory("UNISX")
     const xUNISXContract = await ethers.getContractFactory("xUNISX")
 
-    UNISX = await UNISXContract.deploy()
+    UNISX = await UNISXContract.deploy(UNISX_Supply)
     await UNISX.deployed()
 
     xUNISX = await xUNISXContract.deploy()
@@ -50,14 +51,13 @@ describe("StakingRewards", function () {
 
     /* Give reward token to StakingRewards contract */
 
-    await UNISX.mint(2_000_000n)
     await UNISX.transfer(StakingRewards.address, 2_000_000n)
 
     /* Stake */
 
     const STAKE_VALUE = 1000
 
-    await UNISX.connect(signers.staker).mint(STAKE_VALUE)
+    await UNISX.transfer(staker, STAKE_VALUE)
     await UNISX.connect(signers.staker).approve(StakingRewards.address, STAKE_VALUE)
     await (await StakingRewards.connect(signers.staker).stake(STAKE_VALUE)).wait()
 
@@ -113,7 +113,7 @@ describe("StakingRewards", function () {
 
   it('Withdrawal should not be allowed is staker have insufficient xUNISX balance', async () => {
     const STAKE_VALUE = 1
-    await UNISX.connect(signers.staker).mint(STAKE_VALUE)
+    await UNISX.transfer(staker, STAKE_VALUE)
     await UNISX.connect(signers.staker).approve(StakingRewards.address, STAKE_VALUE)
     await (await StakingRewards.connect(signers.staker).stake(STAKE_VALUE)).wait()
     await xUNISX.connect(signers.staker).approve(StakingRewards.address, STAKE_VALUE)

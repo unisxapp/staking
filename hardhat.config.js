@@ -2,6 +2,8 @@ require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
 
+const deploy = require('./scripts/deploy.js')
+
 const { 
   infura_project_id,
   rinkeby_mnemonic,
@@ -25,3 +27,6 @@ module.exports = {
     apiKey: etherscan_api_key,
   }
 };
+
+task("deploy", "Deploys contracts")
+  .setAction(deploy);
