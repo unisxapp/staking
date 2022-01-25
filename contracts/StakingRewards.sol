@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 
-// Based on https://solidity-by-example.org/defi/staking-rewards/
+// Based on https://github.com/Synthetixio/synthetix/blob/master/contracts/StakingRewards.sol
 
 pragma solidity ^0.8;
 
@@ -67,6 +67,7 @@ contract StakingRewards is Ownable {
         _balances[msg.sender] += _amount;
         stakingToken.transferFrom(msg.sender, address(this), _amount);
         xUNISXToken.mint(msg.sender, _amount);
+        emit Staked(msg.sender, _amount);
     }
 
     function withdraw(uint _amount) external updateReward(msg.sender) {
@@ -75,16 +76,24 @@ contract StakingRewards is Ownable {
         xUNISXToken.transferFrom(msg.sender, address(this), _amount);
         xUNISXToken.burn(_amount);
         stakingToken.transfer(msg.sender, _amount);
+        emit Withdrawn(msg.sender, _amount);
     }
 
     function getReward() external updateReward(msg.sender) returns (uint) {
         uint reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
         rewardsToken.transfer(msg.sender, reward);
+        emit RewardPaid(msg.sender, reward);
         return reward;
     }
 
     function setRewardRate(uint _rewardRate) external updateReward(address(0)) onlyOwner() {
         rewardRate = _rewardRate;
+				emit RewardRateSet(rewardRate);
     }
+
+    event Staked(address indexed user, uint256 amount);
+    event Withdrawn(address indexed user, uint256 amount);
+    event RewardPaid(address indexed user, uint256 reward);
+    event RewardRateSet(uint rewardRate);
 }
