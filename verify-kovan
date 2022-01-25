@@ -2,8 +2,9 @@
 
 npx hardhat verify --network kovan --contract contracts/UNISX.sol:UNISX "0x0fd2dD751D4803EbE981CD39d8dcB0dB656F8D44" "1000000000000000000000000"
 npx hardhat verify --network kovan --contract contracts/xUNISX.sol:xUNISX "0x29DEAB859E99A32083FEeeE870e6e3eb6403e21c"
-npx hardhat verify --network kovan --contract contracts/StakingRewards.sol:StakingRewards "0x0C96B835E8107c0D734a6675A595B846fBB16e9b" \
+npx hardhat verify --network kovan --contract contracts/UNISXStakingRewards.sol:UNISXStakingRewards "0x0C96B835E8107c0D734a6675A595B846fBB16e9b" \
   "0x0fd2dD751D4803EbE981CD39d8dcB0dB656F8D44" \
   "0x0fd2dD751D4803EbE981CD39d8dcB0dB656F8D44" \
   "0x29DEAB859E99A32083FEeeE870e6e3eb6403e21c" \
   "31709791983764"
+npx hardhat verify --network kovan --contract contracts/LPStakingRewardsFactory.sol:LPStakingRewardsFactory '0x4Ff04f592B48FF71E3bFb21BDecbDF0Dd5ACaD15'

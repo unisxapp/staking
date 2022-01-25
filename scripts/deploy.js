@@ -6,7 +6,7 @@ async function deploy() {
       (10n ** 18n) // decimals
       / 365n / 24n / 3600n // seconds per year
 
-  const StakingRewardsContract = await ethers.getContractFactory("StakingRewards")
+  const UNISXStakingRewardsContract = await ethers.getContractFactory("UNISXStakingRewards")
   const UNISXContract = await ethers.getContractFactory("UNISX")
   const xUNISXContract = await ethers.getContractFactory("xUNISX")
 
@@ -18,7 +18,7 @@ async function deploy() {
   await xUNISX.deployed()
   console.log("xUNISX deployed to:", xUNISX.address);
 
-  StakingRewards = await StakingRewardsContract.deploy(
+  StakingRewards = await UNISXStakingRewardsContract.deploy(
     UNISX.address,
     UNISX.address,
     xUNISX.address,
@@ -34,6 +34,11 @@ async function deploy() {
   (await xUNISX.grantRole(MINTER_ROLE, StakingRewards.address)).wait()
   console.log('xUNISX MINTER permission granted')
 
+
+  const LPStakingRewardsFactoryContract = await ethers.getContractFactory("LPStakingRewardsFactory")
+  const LPStakingRewardsFactory = await LPStakingRewardsFactoryContract.deploy()
+  await LPStakingRewardsFactory.deployed()
+  console.log('LPStakingRewardsFactory address:', LPStakingRewardsFactory.address)
 }
 
 module.exports = deploy
