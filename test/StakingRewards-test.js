@@ -47,10 +47,7 @@ describe("StakingRewards", function () {
   });
 
   it("Should give reward to staker", async function () {
-
-
     /* Give reward token to StakingRewards contract */
-
     await UNISX.transfer(StakingRewards.address, 2_000_000n)
 
     /* Stake */
@@ -124,6 +121,48 @@ describe("StakingRewards", function () {
     expect(StakingRewards.connect(signers.staker).withdraw(STAKE_VALUE)).to.be.revertedWith(
       'ERC20: transfer amount exceeds balance'
     );
+  });
+
+  it('Rewards must change after setRewardRate', async () => {
+    /* Give reward token to StakingRewards contract */
+    await UNISX.transfer(StakingRewards.address, 2_000_000n)
+
+    /* Stake */
+
+    const STAKE_VALUE = 1000
+
+    await UNISX.transfer(staker, STAKE_VALUE)
+    await UNISX.connect(signers.staker).approve(StakingRewards.address, STAKE_VALUE)
+    await (await StakingRewards.connect(signers.staker).stake(STAKE_VALUE)).wait()
+
+    const stakeStartTime = (await ethers.provider.getBlock('latest')).timestamp
+
+    /* Increase time */
+    await ethers.provider.send("evm_increaseTime", [600])
+    await ethers.provider.send("evm_mine")
+
+    /* Set new reward rate */
+    const NEW_REWARD_RATE = 3
+    await (await StakingRewards.setRewardRate(NEW_REWARD_RATE)).wait()
+    const rewardUpdateTime = (await ethers.provider.getBlock('latest')).timestamp
+
+    /* Increase time */
+    await ethers.provider.send("evm_increaseTime", [600])
+    await ethers.provider.send("evm_mine")
+
+    /* Get reward */
+    await (await StakingRewards.connect(signers.staker).getReward()).wait()
+
+    const stakeEndTime = (await ethers.provider.getBlock('latest')).timestamp
+
+    const rewardReceived = await UNISX.balanceOf(staker)
+    expect(rewardReceived.toString()).to.equal(
+      (
+        REWARD_RATE * (rewardUpdateTime - stakeStartTime)
+        +
+        NEW_REWARD_RATE * (stakeEndTime - rewardUpdateTime)
+      ).toString()
+    )
   });
 
 });

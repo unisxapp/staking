@@ -55,8 +55,10 @@ contract StakingRewards is Ownable {
         rewardPerTokenStored = rewardPerToken();
         lastUpdateTime = block.timestamp;
 
-        rewards[account] = earned(account);
-        userRewardPerTokenPaid[account] = rewardPerTokenStored;
+        if (account != address(0)) {
+          rewards[account] = earned(account);
+          userRewardPerTokenPaid[account] = rewardPerTokenStored;
+        }
         _;
     }
 
@@ -82,7 +84,7 @@ contract StakingRewards is Ownable {
         return reward;
     }
 
-    function setRewardRate(uint _rewardRate) external onlyOwner() {
+    function setRewardRate(uint _rewardRate) external updateReward(address(0)) onlyOwner() {
         rewardRate = _rewardRate;
     }
 }
