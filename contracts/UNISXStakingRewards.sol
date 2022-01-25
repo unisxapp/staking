@@ -8,7 +8,7 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 import "./xUNISX.sol";
 
-contract StakingRewards is Ownable {
+contract UNISXStakingRewards is Ownable {
     IERC20 public rewardsToken;
     IERC20 public stakingToken;
     xUNISX public xUNISXToken;
