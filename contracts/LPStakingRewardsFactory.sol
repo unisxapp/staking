@@ -10,10 +10,11 @@ contract LPStakingRewardsFactory is Ownable {
     mapping(address => address) public stakingRewards;
 
     event LPStakingRewardsCreated(
-      address indexed _stakingToken,
-      address _rewardsToken,
-      uint _rewardRate,
-      uint _periodFinish
+      address indexed stakingRewards,
+      address indexed stakingToken,
+      address rewardsToken,
+      uint rewardRate,
+      uint periodFinish
     );
 
     function createLPStakingRewards(
@@ -35,6 +36,7 @@ contract LPStakingRewardsFactory is Ownable {
       stakingRewards[_stakingToken] = address(rewards);
 
       emit LPStakingRewardsCreated(
+        address(rewards),
         _stakingToken, 
         _rewardsToken, 
         _rewardRate, 
