@@ -45,6 +45,21 @@ describe("LPStakingRewardsFactory", function () {
     )
   });
 
+  it("Should transfer ownership to creator", async function () {
+    await (await LPStakingRewardsFactory.createLPStakingRewards(
+      LPTest.address,
+      UNISX.address,
+      1,
+      Math.round(new Date().getTime() / 1000),
+    )).wait()
+
+    const stakingRewardsAddress = await LPStakingRewardsFactory.stakingRewards(LPTest.address)
+    const LPStakingRewards = await ethers.getContractFactory("LPStakingRewards")
+    const stakingRewards = LPStakingRewards.attach(stakingRewardsAddress)
+    expect(await stakingRewards.owner()).to.equal(admin)
+    await stakingRewards.setRewardRate(0)
+  });
+
   it("Should not be able to createLPStakingRewards if not an owner", async function () {
     expect(LPStakingRewardsFactory.connect(signers.staker).createLPStakingRewards(
       LPTest.address,

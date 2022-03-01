@@ -33,6 +33,8 @@ contract LPStakingRewardsFactory is Ownable {
         _periodFinish
       );
 
+      rewards.transferOwnership(msg.sender);
+
       stakingRewards[_stakingToken] = address(rewards);
 
       emit LPStakingRewardsCreated(
