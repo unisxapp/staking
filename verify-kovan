@@ -1,0 +1,12 @@
+#!/bin/bash
+
+npx hardhat verify --network kovan --contract contracts/UNISX.sol:UNISX "0x0fd2dD751D4803EbE981CD39d8dcB0dB656F8D44" "1000000000000000000000000"
+npx hardhat verify --network kovan --contract contracts/xUNISX.sol:xUNISX "0x29DEAB859E99A32083FEeeE870e6e3eb6403e21c"
+npx hardhat verify --network kovan --contract contracts/UNISXStakingRewards.sol:UNISXStakingRewards "0x1Dd470C00452D11daF6502A90c1492A3059F49b9" \
+  "0x0fd2dD751D4803EbE981CD39d8dcB0dB656F8D44" \
+  "0x0fd2dD751D4803EbE981CD39d8dcB0dB656F8D44" \
+  "0x29DEAB859E99A32083FEeeE870e6e3eb6403e21c" \
+  "31709791983764"
+npx hardhat verify --network kovan --contract contracts/LPStakingRewardsFactory.sol:LPStakingRewardsFactory "0xB60B55F434CeC287c88061459F06803e708438f8"
+npx hardhat verify --network kovan --contract contracts/LPStakingRewards.sol:LPStakingRewards "0x192Fff54138B241F50221e4DddBc9f3A054F2aF7" \
+  "0x01e7FD992899b6aed1eAbAD46dB51C08C64aCE3e" "0x0fd2dD751D4803EbE981CD39d8dcB0dB656F8D44" "31709791983764" "100000000000000000"
