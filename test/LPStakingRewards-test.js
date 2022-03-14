@@ -64,7 +64,6 @@ describe("LPStakingRewards", function () {
     await ethers.provider.send("evm_increaseTime", [600])
     await ethers.provider.send("evm_mine")
 
-
     /* Get reward */
     await (await LPStakingRewards.connect(signers.staker).getReward()).wait()
 
@@ -84,7 +83,6 @@ describe("LPStakingRewards", function () {
   it("Should not give reward after periodFinish", async () => {
     /* Give reward token to LPStakingRewards contract */
     await UNISX.transfer(LPStakingRewards.address, 2_000_000n)
-
 
     /* Give balance and approve */
     const STAKE_VALUE = 1000

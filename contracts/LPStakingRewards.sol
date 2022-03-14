@@ -8,8 +8,8 @@ import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract LPStakingRewards is Ownable {
-    IERC20 public rewardsToken;
-    IERC20 public stakingToken;
+    IERC20 public immutable rewardsToken;
+    IERC20 public immutable stakingToken;
     uint public periodFinish;
 
     uint public rewardRate;
@@ -34,9 +34,9 @@ contract LPStakingRewards is Ownable {
         periodFinish = _periodFinish;
     }
 
-		function lastTimeRewardApplicable() public view returns (uint256) {
-				return block.timestamp < periodFinish ? block.timestamp : periodFinish;
-		}
+    function lastTimeRewardApplicable() public view returns (uint256) {
+        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
+    }
 
     function rewardPerToken() public view returns (uint) {
         if (_totalSupply == 0) {
@@ -49,9 +49,7 @@ contract LPStakingRewards is Ownable {
 
     function earned(address account) public view returns (uint) {
         return
-            ((_balances[account] *
-                (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) +
-            rewards[account];
+            ((_balances[account] * (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) + rewards[account];
     }
 
     modifier updateReward(address account) {
@@ -89,7 +87,7 @@ contract LPStakingRewards is Ownable {
 
     function setRewardRate(uint _rewardRate) external updateReward(address(0)) onlyOwner() {
         rewardRate = _rewardRate;
-				emit RewardRateSet(rewardRate);
+	    emit RewardRateSet(rewardRate);
     }
 
     event Staked(address indexed user, uint256 amount);

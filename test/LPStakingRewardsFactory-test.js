@@ -67,7 +67,43 @@ describe("LPStakingRewardsFactory", function () {
       1,
       Math.round(new Date().getTime() / 1000),
     )).to.be.revertedWith('Ownable: caller is not the owner');
-
   });
 
+  it("Should allow to create a new LPStakingRewards contract after periodFinish has passed", async () => {
+    const periodFinish = 1000;
+
+    await (await LPStakingRewardsFactory.createLPStakingRewards(
+      LPTest.address,
+      UNISX.address,
+      1,
+      periodFinish
+    )).wait()
+
+    expect(LPStakingRewardsFactory.createLPStakingRewards(
+      LPTest.address,
+      UNISX.address,
+      1,
+      periodFinish,
+    )).to.be.revertedWith("already exists");
+
+    await ethers.provider.send("evm_increaseTime", [periodFinish]);
+    await ethers.provider.send("evm_mine");
+
+    const currentStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
+
+    expect(currentStakingRewards).to.not.equal(
+      '0x0000000000000000000000000000000000000000'
+    );
+
+    await (await LPStakingRewardsFactory.createLPStakingRewards(
+      LPTest.address,
+      UNISX.address,
+      1,
+      periodFinish,
+    )).wait()
+
+    const newStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
+
+    expect(newStakingRewards).to.not.equal(currentStakingRewards);
+  })
 });
