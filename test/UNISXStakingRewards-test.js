@@ -5,9 +5,9 @@ describe("xUNISX", function () {
   const UNISX_Supply = 10n ** (18n /*decimals*/ + 6n /* 1 million */)
   const REWARD_RATE = 2
 
-  let admin, staker
+  let staker
   let signers
-  let UNISX, xUNISX
+  let UNISX, xUNISX, UNISXStakingRewards;
 
   beforeEach(async () => {
 
@@ -26,24 +26,27 @@ describe("xUNISX", function () {
     UNISX = await UNISXContract.deploy(UNISX_Supply)
     await UNISX.deployed()
 
-    xUNISX = await xUNISXContract.deploy(
-      UNISX.address,
-      REWARD_RATE,
-    )
+    xUNISX = await xUNISXContract.deploy();
     await xUNISX.deployed()
+
+    UNISXStakingRewards = await (await ethers.getContractFactory("UNISXStakingRewards")).deploy(
+      UNISX.address,
+      xUNISX.address, 
+      REWARD_RATE,
+    );
   });
 
   it("Should give reward to staker", async function () {
     /* Give reward token to xUNISX contract */
-    await UNISX.transfer(xUNISX.address, 2_000_000n)
+    await UNISX.transfer(UNISXStakingRewards.address, 2_000_000n)
 
     /* Stake */
 
     const STAKE_VALUE = 1000
 
     await UNISX.transfer(staker, STAKE_VALUE)
-    await UNISX.connect(signers.staker).approve(xUNISX.address, STAKE_VALUE)
-    await (await xUNISX.connect(signers.staker).stake(STAKE_VALUE)).wait()
+    await UNISX.connect(signers.staker).approve(UNISXStakingRewards.address, STAKE_VALUE)
+    await (await UNISXStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).wait()
 
     expect((await UNISX.balanceOf(staker)).toString()).to.equal('0')
     expect((await xUNISX.balanceOf(staker)).toString()).to.equal(STAKE_VALUE.toString())
@@ -55,7 +58,7 @@ describe("xUNISX", function () {
     await ethers.provider.send("evm_mine")
 
     /* Get reward */
-    await (await xUNISX.connect(signers.staker).getReward()).wait()
+    await (await UNISXStakingRewards.connect(signers.staker).getReward()).wait()
 
     const stakeEndTime = (await ethers.provider.getBlock('latest')).timestamp
     const rewardReceived = await UNISX.balanceOf(staker)
@@ -65,8 +68,7 @@ describe("xUNISX", function () {
 
     /* Withdraw */
     
-    // First allow xUNISX to spend
-    await (await xUNISX.connect(signers.staker).withdraw(STAKE_VALUE)).wait()
+    await (await UNISXStakingRewards.connect(signers.staker).withdraw(STAKE_VALUE)).wait()
     expect((await UNISX.balanceOf(staker)).toString()).to.equal(
       (STAKE_VALUE + rewardReceived.toNumber()).toString()
     )
@@ -77,32 +79,32 @@ describe("xUNISX", function () {
 
   it('Owner should be able to change reward', async () => {
     const NEW_REWARD_RATE = 3
-    await (await xUNISX.setRewardRate(NEW_REWARD_RATE)).wait()
-    expect((await xUNISX.rewardRate()).toString()).to.equal(NEW_REWARD_RATE.toString())
+    await (await UNISXStakingRewards.setRewardRate(NEW_REWARD_RATE)).wait()
+    expect((await UNISXStakingRewards.rewardRate()).toString()).to.equal(NEW_REWARD_RATE.toString())
   });
 
   it('Non-owner should not be able to change reward', async () => {
     const NEW_REWARD_RATE = 3
-    expect(xUNISX.connect(signers.staker).setRewardRate(NEW_REWARD_RATE)).to.be.revertedWith('Ownable: caller is not the owner');
+    expect(UNISXStakingRewards.connect(signers.staker).setRewardRate(NEW_REWARD_RATE)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
   it('Should not allow to stake if UNISX balance is not sufficient', async () => {
     const STAKE_VALUE = 1
     await UNISX.connect(signers.staker).approve(xUNISX.address, STAKE_VALUE)
-    expect(xUNISX.connect(signers.staker).stake(STAKE_VALUE)).to.be.revertedWith('ERC20: transfer amount exceeds balance')
+    expect(UNISXStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).to.be.revertedWith('ERC20: transfer amount exceeds balance')
   });
 
   it('Rewards must change after setRewardRate', async () => {
-    /* Give reward token to xUNISX contract */
-    await UNISX.transfer(xUNISX.address, 2_000_000n)
+    /* Give reward token to UNISXStakingRewards contract */
+    await UNISX.transfer(UNISXStakingRewards.address, 2_000_000n)
 
     /* Stake */
 
     const STAKE_VALUE = 1000
 
     await UNISX.transfer(staker, STAKE_VALUE)
-    await UNISX.connect(signers.staker).approve(xUNISX.address, STAKE_VALUE)
-    await (await xUNISX.connect(signers.staker).stake(STAKE_VALUE)).wait()
+    await UNISX.connect(signers.staker).approve(UNISXStakingRewards.address, STAKE_VALUE)
+    await (await UNISXStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).wait()
 
     const stakeStartTime = (await ethers.provider.getBlock('latest')).timestamp
 
@@ -112,7 +114,7 @@ describe("xUNISX", function () {
 
     /* Set new reward rate */
     const NEW_REWARD_RATE = 3
-    await (await xUNISX.setRewardRate(NEW_REWARD_RATE)).wait()
+    await (await UNISXStakingRewards.setRewardRate(NEW_REWARD_RATE)).wait()
     const rewardUpdateTime = (await ethers.provider.getBlock('latest')).timestamp
 
     /* Increase time */
@@ -120,7 +122,7 @@ describe("xUNISX", function () {
     await ethers.provider.send("evm_mine")
 
     /* Get reward */
-    await (await xUNISX.connect(signers.staker).getReward()).wait()
+    await (await UNISXStakingRewards.connect(signers.staker).getReward()).wait()
 
     const stakeEndTime = (await ethers.provider.getBlock('latest')).timestamp
 

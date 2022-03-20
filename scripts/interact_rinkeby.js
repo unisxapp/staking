@@ -27,9 +27,10 @@ async function main() {
     // const tx = await StakingRewardsContract.withdraw(100_000000000000000000n);
     // await StakingRewardsContract.getReward();
 
+    // await StakingRewardsContract.withdraw(1_000000000000000000n);
+
     balance = await UNISXContract.balanceOf(account);
     console.log(balance);
-
 }
 
 main()
