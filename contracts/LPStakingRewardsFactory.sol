@@ -24,7 +24,8 @@ contract LPStakingRewardsFactory is Ownable {
     ) external onlyOwner {
         require(
             stakingRewards[_stakingToken] == address(0) ||
-                LPStakingRewards(stakingRewards[_stakingToken]).lastTimeRewardApplicable() <
+                LPStakingRewards(stakingRewards[_stakingToken])
+                    .lastTimeRewardApplicable() <
                 block.timestamp,
             "already exists"
         );

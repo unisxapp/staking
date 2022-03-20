@@ -10,7 +10,6 @@ import "./interfaces/IERC20Min.sol";
 contract LPStakingRewards is Ownable {
     IERC20Min public immutable stakingToken;
     IERC20Min public immutable rewardsToken;
-    
     uint256 public immutable periodFinish;
 
     uint256 public rewardRate;
@@ -45,12 +44,16 @@ contract LPStakingRewards is Ownable {
         }
         return
             rewardPerTokenStored +
-            (((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate * 1e18) / _totalSupply);
+            (((lastTimeRewardApplicable() - lastUpdateTime) *
+                rewardRate *
+                1e18) / _totalSupply);
     }
 
     function earned(address account) public view returns (uint256) {
         return
-            ((balanceOf[account] * (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) + rewards[account];
+            ((balanceOf[account] *
+                (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) +
+            rewards[account];
     }
 
     modifier updateReward(address account) {
@@ -61,12 +64,12 @@ contract LPStakingRewards is Ownable {
             rewards[account] = earned(account);
             userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
-        
+
         _;
     }
 
     function stake(uint256 _amount) external updateReward(msg.sender) {
-        require(_amount > 0, 'cannot stake 0');
+        require(_amount > 0, "cannot stake 0");
         stakingToken.transferFrom(msg.sender, address(this), _amount);
         _totalSupply += _amount;
         balanceOf[msg.sender] += _amount;
@@ -74,7 +77,7 @@ contract LPStakingRewards is Ownable {
     }
 
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
-        require(_amount > 0, 'cannot withdraw 0');
+        require(_amount > 0, "cannot withdraw 0");
         _totalSupply -= _amount;
         balanceOf[msg.sender] -= _amount;
         stakingToken.transfer(msg.sender, _amount);
@@ -89,9 +92,13 @@ contract LPStakingRewards is Ownable {
         return reward;
     }
 
-    function setRewardRate(uint256 _rewardRate) external updateReward(address(0)) onlyOwner() {
+    function setRewardRate(uint256 _rewardRate)
+        external
+        updateReward(address(0))
+        onlyOwner
+    {
         rewardRate = _rewardRate;
-	    emit RewardRateSet(rewardRate);
+        emit RewardRateSet(rewardRate);
     }
 
     event Staked(address indexed user, uint256 amount);

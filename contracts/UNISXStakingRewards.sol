@@ -38,7 +38,8 @@ contract UNISXStakingRewards is Ownable {
         }
         return
             rewardPerTokenStored +
-            (((block.timestamp - lastUpdateTime) * rewardRate * 1e18) / _totalSupply);
+            (((block.timestamp - lastUpdateTime) * rewardRate * 1e18) /
+                _totalSupply);
     }
 
     function earned(address account) public view returns (uint256) {
@@ -53,15 +54,15 @@ contract UNISXStakingRewards is Ownable {
         lastUpdateTime = block.timestamp;
 
         if (account != address(0)) {
-          rewards[account] = earned(account);
-          userRewardPerTokenPaid[account] = rewardPerTokenStored;
+            rewards[account] = earned(account);
+            userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
 
         _;
     }
 
     function stake(uint256 _amount) external updateReward(msg.sender) {
-        require(_amount > 0, 'cannot stake 0');
+        require(_amount > 0, "cannot stake 0");
         _totalSupply += _amount;
         balanceOf[msg.sender] += _amount;
         UNISXToken.transferFrom(msg.sender, address(this), _amount);
@@ -70,7 +71,7 @@ contract UNISXStakingRewards is Ownable {
     }
 
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
-        require(_amount > 0, 'cannot withdraw 0');
+        require(_amount > 0, "cannot withdraw 0");
         _totalSupply -= _amount;
         balanceOf[msg.sender] -= _amount;
         xUNISXTokenManager.burn(msg.sender, _amount);
@@ -86,7 +87,11 @@ contract UNISXStakingRewards is Ownable {
         return reward;
     }
 
-    function setRewardRate(uint256 _rewardRate) external updateReward(address(0)) onlyOwner() {
+    function setRewardRate(uint256 _rewardRate)
+        external
+        updateReward(address(0))
+        onlyOwner
+    {
         rewardRate = _rewardRate;
         emit RewardRateSet(rewardRate);
     }
