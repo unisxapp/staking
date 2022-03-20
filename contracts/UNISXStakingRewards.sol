@@ -91,7 +91,10 @@ contract UNISXStakingRewards is Ownable {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
         UNISXToken.transfer(msg.sender, reward);
-        require(UNISXToken.balanceOf(address(this)) >= _totalSupply, 'out of reward');
+        require(
+            UNISXToken.balanceOf(address(this)) >= _totalSupply,
+            "out of reward"
+        );
         emit RewardPaid(msg.sender, reward);
         return reward;
     }
