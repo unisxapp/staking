@@ -24,12 +24,13 @@ async function main() {
     // console.log(allowance);
 
     // const tx = await StakingRewardsContract.stake(10_000000000000000000n);
+    // const tx = await StakingRewardsContract.withdraw(100_000000000000000000n);
+    // await StakingRewardsContract.getReward();
+
     balance = await UNISXContract.balanceOf(account);
     console.log(balance);
 
 }
-
-// 1000000.000000000000000000
 
 main()
     .then(() => process.exit(0))

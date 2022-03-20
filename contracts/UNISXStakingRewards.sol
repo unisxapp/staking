@@ -56,11 +56,12 @@ contract UNISXStakingRewards is Ownable {
           rewards[account] = earned(account);
           userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
-        
+
         _;
     }
 
     function stake(uint256 _amount) external updateReward(msg.sender) {
+        require(_amount > 0, 'cannot stake 0');
         _totalSupply += _amount;
         balanceOf[msg.sender] += _amount;
         UNISXToken.transferFrom(msg.sender, address(this), _amount);
@@ -69,6 +70,7 @@ contract UNISXStakingRewards is Ownable {
     }
 
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
+        require(_amount > 0, 'cannot withdraw 0');
         _totalSupply -= _amount;
         balanceOf[msg.sender] -= _amount;
         xUNISXTokenManager.burn(msg.sender, _amount);

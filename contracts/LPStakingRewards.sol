@@ -66,6 +66,7 @@ contract LPStakingRewards is Ownable {
     }
 
     function stake(uint256 _amount) external updateReward(msg.sender) {
+        require(_amount > 0, 'cannot stake 0');
         stakingToken.transferFrom(msg.sender, address(this), _amount);
         _totalSupply += _amount;
         balanceOf[msg.sender] += _amount;
@@ -73,6 +74,7 @@ contract LPStakingRewards is Ownable {
     }
 
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
+        require(_amount > 0, 'cannot withdraw 0');
         _totalSupply -= _amount;
         balanceOf[msg.sender] -= _amount;
         stakingToken.transfer(msg.sender, _amount);
