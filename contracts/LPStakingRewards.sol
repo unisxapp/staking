@@ -20,7 +20,7 @@ contract LPStakingRewards is Ownable {
     mapping(address => uint256) public rewards;
 
     uint256 private _totalSupply;
-    mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) private _balances;
 
     constructor(
         address _stakingToken,
@@ -32,6 +32,14 @@ contract LPStakingRewards is Ownable {
         rewardsToken = IERC20Min(_rewardsToken);
         rewardRate = _rewardRate;
         periodFinish = _periodFinish;
+    }
+
+    function totalSupply() external view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) external view returns (uint256) {
+        return _balances[account];
     }
 
     function lastTimeRewardApplicable() public view returns (uint256) {
@@ -51,7 +59,7 @@ contract LPStakingRewards is Ownable {
 
     function earned(address account) public view returns (uint256) {
         return
-            ((balanceOf[account] *
+            ((_balances[account] *
                 (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) +
             rewards[account];
     }
@@ -72,14 +80,14 @@ contract LPStakingRewards is Ownable {
         require(_amount > 0, "cannot stake 0");
         stakingToken.transferFrom(msg.sender, address(this), _amount);
         _totalSupply += _amount;
-        balanceOf[msg.sender] += _amount;
+        _balances[msg.sender] += _amount;
         emit Staked(msg.sender, _amount);
     }
 
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
         require(_amount > 0, "cannot withdraw 0");
         _totalSupply -= _amount;
-        balanceOf[msg.sender] -= _amount;
+        _balances[msg.sender] -= _amount;
         stakingToken.transfer(msg.sender, _amount);
         emit Withdrawn(msg.sender, _amount);
     }

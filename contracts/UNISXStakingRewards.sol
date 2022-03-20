@@ -20,7 +20,7 @@ contract UNISXStakingRewards is Ownable {
     mapping(address => uint256) public rewards;
 
     uint256 private _totalSupply;
-    mapping(address => uint256) public balanceOf;
+    mapping(address => uint256) private _balances;
 
     constructor(
         address _UNISXToken,
@@ -30,6 +30,14 @@ contract UNISXStakingRewards is Ownable {
         UNISXToken = IMiniMeMin(_UNISXToken);
         xUNISXTokenManager = ITokenManagerMin(_tokenManager);
         rewardRate = _rewardRate;
+    }
+
+    function totalSupply() external view returns (uint256) {
+        return _totalSupply;
+    }
+
+    function balanceOf(address account) external view returns (uint256) {
+        return _balances[account];
     }
 
     function rewardPerToken() public view returns (uint256) {
@@ -44,7 +52,7 @@ contract UNISXStakingRewards is Ownable {
 
     function earned(address account) public view returns (uint256) {
         return
-            ((balanceOf[account] *
+            ((_balances[account] *
                 (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) +
             rewards[account];
     }
@@ -64,7 +72,7 @@ contract UNISXStakingRewards is Ownable {
     function stake(uint256 _amount) external updateReward(msg.sender) {
         require(_amount > 0, "cannot stake 0");
         _totalSupply += _amount;
-        balanceOf[msg.sender] += _amount;
+        _balances[msg.sender] += _amount;
         UNISXToken.transferFrom(msg.sender, address(this), _amount);
         xUNISXTokenManager.mint(msg.sender, _amount);
         emit Staked(msg.sender, _amount);
@@ -73,7 +81,7 @@ contract UNISXStakingRewards is Ownable {
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
         require(_amount > 0, "cannot withdraw 0");
         _totalSupply -= _amount;
-        balanceOf[msg.sender] -= _amount;
+        _balances[msg.sender] -= _amount;
         xUNISXTokenManager.burn(msg.sender, _amount);
         UNISXToken.transfer(msg.sender, _amount);
         emit Withdrawn(msg.sender, _amount);
