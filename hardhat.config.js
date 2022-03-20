@@ -7,25 +7,20 @@ const deploy = require('./scripts/deploy.js')
 const { 
   infura_project_id,
   rinkeby_mnemonic,
-  kovan_mnemonic,
   etherscan_api_key
 } = require('./secrets.json');
 
 module.exports = {
   solidity: "0.8.4",
   networks: {
-    // rinkeby: {
-    //   url: 'https://rinkeby.infura.io/v3/' + infura_project_id,
-    //   accounts: {mnemonic: rinkeby_mnemonic},
-    // },
-    // kovan: {
-    //   url: 'https://kovan.infura.io/v3/' + infura_project_id,
-    //   accounts: {mnemonic: kovan_mnemonic},
-    // },
+    rinkeby: {
+      url: 'https://rinkeby.infura.io/v3/' + infura_project_id,
+      accounts: [rinkeby_mnemonic],
+    },
     hardhat: {
       forking: {
         chainId: 1,
-        url: infura_project_id,
+        url: 'https://mainnet.infura.io/v3/' + infura_project_id,
         timeout: 0,
       },
     },

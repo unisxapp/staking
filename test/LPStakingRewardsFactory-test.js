@@ -70,28 +70,11 @@ describe("LPStakingRewardsFactory", function () {
   });
 
   it("Should allow to create a new LPStakingRewards contract after periodFinish has passed", async () => {
-    const periodFinish = 1000;
+    const currentTimestamp = Math.round(new Date().getTime() / 1000);
+    const timestampIncrement = 1000;
 
-    await (await LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address,
-      UNISX.address,
-      1,
-      periodFinish
-    )).wait()
-
-    expect(LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address,
-      UNISX.address,
-      1,
-      periodFinish,
-    )).to.be.revertedWith("already exists");
-
-    await ethers.provider.send("evm_increaseTime", [periodFinish]);
-    await ethers.provider.send("evm_mine");
-
-    const currentStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
-
-    expect(currentStakingRewards).to.not.equal(
+    const initialStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
+    expect(initialStakingRewards).to.equal(
       '0x0000000000000000000000000000000000000000'
     );
 
@@ -99,11 +82,43 @@ describe("LPStakingRewardsFactory", function () {
       LPTest.address,
       UNISX.address,
       1,
-      periodFinish,
+      currentTimestamp + timestampIncrement,
+    )).wait()
+
+    await expect(LPStakingRewardsFactory.createLPStakingRewards(
+      LPTest.address,
+      UNISX.address,
+      1,
+      1000000000000000,
+    )).to.be.revertedWith("already exists");
+
+    const currentStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
+    expect(currentStakingRewards).to.not.equal(
+      '0x0000000000000000000000000000000000000000'
+    );
+
+    const cSR = await ethers.getContractAt('LPStakingRewards', currentStakingRewards);
+    const periodFinish = await cSR.periodFinish();
+    expect(periodFinish).to.equal((currentTimestamp + timestampIncrement).toString());
+
+    await ethers.provider.send("evm_increaseTime", [timestampIncrement / 2]);
+    await ethers.provider.send("evm_mine");
+    await expect(LPStakingRewardsFactory.createLPStakingRewards(
+      LPTest.address, 
+      UNISX.address, 
+      1,
+      1000000000000000
+    )).to.be.revertedWith("already exists");
+    await ethers.provider.send("evm_increaseTime", [timestampIncrement / 2 + 1000]);
+    await ethers.provider.send("evm_mine");
+    await (await LPStakingRewardsFactory.createLPStakingRewards(
+      LPTest.address,
+      UNISX.address,
+      1,
+      1000000000000000,
     )).wait()
 
     const newStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
-
     expect(newStakingRewards).to.not.equal(currentStakingRewards);
   })
 });

@@ -5,13 +5,12 @@
 pragma solidity ^0.8;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
-import "./interfaces/IERC20Min.sol";
+import "./interfaces/IMiniMeMin.sol";
+import "./interfaces/ITokenManagerMin.sol";
 
-contract LPStakingRewards is Ownable {
-    IERC20Min public immutable stakingToken;
-    IERC20Min public immutable rewardsToken;
-    
-    uint256 public immutable periodFinish;
+contract UNISXStakingRewards is Ownable {
+    IMiniMeMin public immutable UNISXToken;
+    ITokenManagerMin public immutable xUNISXTokenManager;
 
     uint256 public rewardRate;
     uint256 public lastUpdateTime;
@@ -24,19 +23,13 @@ contract LPStakingRewards is Ownable {
     mapping(address => uint256) public balanceOf;
 
     constructor(
-        address _stakingToken,
-        address _rewardsToken,
-        uint256 _rewardRate,
-        uint256 _periodFinish
+        address _UNISXToken,
+        address _tokenManager,
+        uint256 _rewardRate
     ) {
-        stakingToken = IERC20Min(_stakingToken);
-        rewardsToken = IERC20Min(_rewardsToken);
+        UNISXToken = IMiniMeMin(_UNISXToken);
+        xUNISXTokenManager = ITokenManagerMin(_tokenManager);
         rewardRate = _rewardRate;
-        periodFinish = _periodFinish;
-    }
-
-    function lastTimeRewardApplicable() public view returns (uint256) {
-        return block.timestamp < periodFinish ? block.timestamp : periodFinish;
     }
 
     function rewardPerToken() public view returns (uint256) {
@@ -45,51 +38,55 @@ contract LPStakingRewards is Ownable {
         }
         return
             rewardPerTokenStored +
-            (((lastTimeRewardApplicable() - lastUpdateTime) * rewardRate * 1e18) / _totalSupply);
+            (((block.timestamp - lastUpdateTime) * rewardRate * 1e18) / _totalSupply);
     }
 
     function earned(address account) public view returns (uint256) {
         return
-            ((balanceOf[account] * (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) + rewards[account];
+            ((balanceOf[account] *
+                (rewardPerToken() - userRewardPerTokenPaid[account])) / 1e18) +
+            rewards[account];
     }
 
     modifier updateReward(address account) {
         rewardPerTokenStored = rewardPerToken();
-        lastUpdateTime = lastTimeRewardApplicable();
+        lastUpdateTime = block.timestamp;
 
         if (account != address(0)) {
-            rewards[account] = earned(account);
-            userRewardPerTokenPaid[account] = rewardPerTokenStored;
+          rewards[account] = earned(account);
+          userRewardPerTokenPaid[account] = rewardPerTokenStored;
         }
         
         _;
     }
 
     function stake(uint256 _amount) external updateReward(msg.sender) {
-        stakingToken.transferFrom(msg.sender, address(this), _amount);
         _totalSupply += _amount;
         balanceOf[msg.sender] += _amount;
+        UNISXToken.transferFrom(msg.sender, address(this), _amount);
+        xUNISXTokenManager.mint(msg.sender, _amount);
         emit Staked(msg.sender, _amount);
     }
 
     function withdraw(uint256 _amount) external updateReward(msg.sender) {
         _totalSupply -= _amount;
         balanceOf[msg.sender] -= _amount;
-        stakingToken.transfer(msg.sender, _amount);
+        xUNISXTokenManager.burn(msg.sender, _amount);
+        UNISXToken.transfer(msg.sender, _amount);
         emit Withdrawn(msg.sender, _amount);
     }
 
     function getReward() external updateReward(msg.sender) returns (uint256) {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
-        rewardsToken.transfer(msg.sender, reward);
+        UNISXToken.transfer(msg.sender, reward);
         emit RewardPaid(msg.sender, reward);
         return reward;
     }
 
     function setRewardRate(uint256 _rewardRate) external updateReward(address(0)) onlyOwner() {
         rewardRate = _rewardRate;
-	    emit RewardRateSet(rewardRate);
+        emit RewardRateSet(rewardRate);
     }
 
     event Staked(address indexed user, uint256 amount);
