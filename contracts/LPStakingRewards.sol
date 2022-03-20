@@ -96,6 +96,7 @@ contract LPStakingRewards is Ownable {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
         rewardsToken.transfer(msg.sender, reward);
+        require(stakingToken.balanceOf(address(this)) >= _totalSupply, 'out of reward');
         emit RewardPaid(msg.sender, reward);
         return reward;
     }
