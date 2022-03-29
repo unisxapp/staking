@@ -2,13 +2,11 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("LPStakingRewardsFactory", function () {
-
-  let admin, staker
-  let signers
-  let UNISX, LPTest, LPStakingRewardsFactory
+  let admin, staker;
+  let signers;
+  let UNISX, USDC, LPStakingRewardsFactory;
 
   beforeEach(async () => {
-
     /* Setup roles */
     [admin, staker] = await ethers.provider.listAccounts()
     signers = {
@@ -17,16 +15,14 @@ describe("LPStakingRewardsFactory", function () {
     }
 
     /* Deploy contracts */
-
     const LPStakingRewardsFactoryContract = await ethers.getContractFactory("LPStakingRewardsFactory")
-    const UNISXContract = await ethers.getContractFactory("UNISX")
-    const LPTestContract = await ethers.getContractFactory("LPTest")
+    const USDCContract = await ethers.getContractFactory("MockUSDC");
+    const UNISXContract = await ethers.getContractFactory("MockUNISX");
 
+    USDC = await USDCContract.deploy(1000)
+    await USDC.deployed()
     UNISX = await UNISXContract.deploy(1000)
     await UNISX.deployed()
-
-    LPTest = await LPTestContract.deploy(1000)
-    await LPTest.deployed()
 
     LPStakingRewardsFactory = await LPStakingRewardsFactoryContract.deploy()
     await LPStakingRewardsFactory.deployed()
@@ -34,35 +30,35 @@ describe("LPStakingRewardsFactory", function () {
 
   it("Should createLPStakingRewards", async function () {
     await (await LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address,
+      USDC.address,
       UNISX.address,
       1,
       Math.round(new Date().getTime() / 1000),
-    )).wait()
+    )).wait();
 
-    expect(await LPStakingRewardsFactory.stakingRewards(LPTest.address)).to.not.equal(
+    expect(await LPStakingRewardsFactory.stakingRewards(USDC.address)).to.not.equal(
       '0x0000000000000000000000000000000000000000'
-    )
+    );
   });
 
   it("Should transfer ownership to creator", async function () {
     await (await LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address,
+      USDC.address,
       UNISX.address,
       1,
       Math.round(new Date().getTime() / 1000),
-    )).wait()
+    )).wait();
 
-    const stakingRewardsAddress = await LPStakingRewardsFactory.stakingRewards(LPTest.address)
-    const LPStakingRewards = await ethers.getContractFactory("LPStakingRewards")
-    const stakingRewards = LPStakingRewards.attach(stakingRewardsAddress)
-    expect(await stakingRewards.owner()).to.equal(admin)
-    await stakingRewards.setRewardRate(0)
+    const stakingRewardsAddress = await LPStakingRewardsFactory.stakingRewards(USDC.address);
+    const LPStakingRewards = await ethers.getContractFactory("LPStakingRewards");
+    const stakingRewards = LPStakingRewards.attach(stakingRewardsAddress);
+    expect(await stakingRewards.owner()).to.equal(admin);
+    await stakingRewards.setRewardRate(0);
   });
 
   it("Should not be able to createLPStakingRewards if not an owner", async function () {
     expect(LPStakingRewardsFactory.connect(signers.staker).createLPStakingRewards(
-      LPTest.address,
+      USDC.address,
       UNISX.address,
       1,
       Math.round(new Date().getTime() / 1000),
@@ -70,55 +66,56 @@ describe("LPStakingRewardsFactory", function () {
   });
 
   it("Should allow to create a new LPStakingRewards contract after periodFinish has passed", async () => {
-    const currentTimestamp = Math.round(new Date().getTime() / 1000);
-    const timestampIncrement = 1000;
+    const currentTimestamp = BigInt((await ethers.provider.getBlock("latest")).timestamp);
+    const TIME0 = 500n;
+    const TIME1 = 500n;
 
-    const initialStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
+    const initialStakingRewards = await LPStakingRewardsFactory.stakingRewards(USDC.address);
     expect(initialStakingRewards).to.equal(
       '0x0000000000000000000000000000000000000000'
     );
 
     await (await LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address,
+      USDC.address,
       UNISX.address,
-      1,
-      currentTimestamp + timestampIncrement,
+      1n,
+      currentTimestamp + TIME0 + TIME1,
     )).wait()
-
-    await expect(LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address,
-      UNISX.address,
-      1,
-      1000000000000000,
-    )).to.be.revertedWith("already exists");
-
-    const currentStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
+    
+    const currentStakingRewards = await LPStakingRewardsFactory.stakingRewards(USDC.address);
     expect(currentStakingRewards).to.not.equal(
       '0x0000000000000000000000000000000000000000'
     );
 
-    const cSR = await ethers.getContractAt('LPStakingRewards', currentStakingRewards);
-    const periodFinish = await cSR.periodFinish();
-    expect(periodFinish).to.equal((currentTimestamp + timestampIncrement).toString());
+    const StakingRewards = await ethers.getContractAt('LPStakingRewards', currentStakingRewards);
+    const periodFinish = await StakingRewards.periodFinish();
+    expect(periodFinish).to.equal((currentTimestamp + TIME0 + TIME1).toString());
 
-    await ethers.provider.send("evm_increaseTime", [timestampIncrement / 2]);
+    await expect(LPStakingRewardsFactory.createLPStakingRewards(
+      USDC.address,
+      UNISX.address,
+      1n,
+      1000000000000000n,
+    )).to.be.revertedWith("already exists");
+
+    await ethers.provider.send("evm_increaseTime", [Number(TIME0)]);
     await ethers.provider.send("evm_mine");
     await expect(LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address, 
+      USDC.address, 
       UNISX.address, 
-      1,
-      1000000000000000
+      1n,
+      1000000000000000n
     )).to.be.revertedWith("already exists");
-    await ethers.provider.send("evm_increaseTime", [timestampIncrement / 2 + 1000]);
+    await ethers.provider.send("evm_increaseTime", [Number(TIME1)]);
     await ethers.provider.send("evm_mine");
     await (await LPStakingRewardsFactory.createLPStakingRewards(
-      LPTest.address,
+      USDC.address,
       UNISX.address,
       1,
       1000000000000000,
     )).wait()
 
-    const newStakingRewards = await LPStakingRewardsFactory.stakingRewards(LPTest.address);
+    const newStakingRewards = await LPStakingRewardsFactory.stakingRewards(USDC.address);
     expect(newStakingRewards).to.not.equal(currentStakingRewards);
   })
 });

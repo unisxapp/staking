@@ -9,3 +9,10 @@ cache
 artifacts
 
 secrets.json
+
+#Verification scripts
+verify-kovan.sh
+verify-mainnet.sh
+
+#Deployment and interaction scripts
+scripts
