@@ -6,7 +6,7 @@ describe("LPStakingRewards", function () {
 
   let admin, staker;
   let signers;
-  let UNISX, USDC, LPStakingRewards;
+  let UNISX, UNISXLP, LPStakingRewards;
   let periodFinish;
 
   beforeEach(async () => {
@@ -19,18 +19,18 @@ describe("LPStakingRewards", function () {
 
     /* Deploy contracts */
     const LPStakingRewardsContract = await ethers.getContractFactory("LPStakingRewards")
-    const USDCContract = await ethers.getContractFactory("MockUSDC");
+    const UNISXLPContract = await ethers.getContractFactory("MockUNISXLP");
     const UNISXContract = await ethers.getContractFactory("MockUNISX");
 
-    USDC = await USDCContract.deploy(46n * (10n ** (9n + 6n))); // 46 billion max supply
-    await USDC.deployed();
+    UNISXLP = await UNISXLPContract.deploy(46n * (10n ** (9n + 6n))); // 46 billion max supply
+    await UNISXLP.deployed();
     UNISX = await UNISXContract.deploy(10n ** (6n + 18n)); // 1 million max supply
     await UNISX.deployed();
 
     periodFinish = (await ethers.provider.getBlock('latest')).timestamp + 2000;
 
     LPStakingRewards = await LPStakingRewardsContract.deploy(
-      USDC.address,
+      UNISXLP.address,
       UNISX.address,
       REWARD_RATE,
       periodFinish,
@@ -43,13 +43,13 @@ describe("LPStakingRewards", function () {
     await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
 
     /* Stake */
-    const STAKE_VALUE = 100_000000n // 100 USDC
+    const STAKE_VALUE = 100_000000n // 100 UNISXLP
 
-    await USDC.transfer(staker, STAKE_VALUE);
-    await USDC.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
+    await UNISXLP.transfer(staker, STAKE_VALUE);
+    await UNISXLP.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
     await (await LPStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).wait();
 
-    expect((await USDC.balanceOf(staker)).toString()).to.equal('0');
+    expect((await UNISXLP.balanceOf(staker)).toString()).to.equal('0');
 
     const stakeStartTime = (await ethers.provider.getBlock('latest')).timestamp;
 
@@ -68,7 +68,7 @@ describe("LPStakingRewards", function () {
 
     /* Withdraw */
     await (await LPStakingRewards.connect(signers.staker).withdraw(STAKE_VALUE)).wait();
-    expect((await USDC.balanceOf(staker)).toString()).to.equal(STAKE_VALUE.toString());
+    expect((await UNISXLP.balanceOf(staker)).toString()).to.equal(STAKE_VALUE.toString());
   });
 
   it("Should not give reward after periodFinish", async () => {
@@ -76,9 +76,9 @@ describe("LPStakingRewards", function () {
     await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
 
     /* Give balance and approve */
-    const STAKE_VALUE = 100_000000n // 100 USDC
-    await USDC.transfer(staker, STAKE_VALUE);
-    await USDC.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
+    const STAKE_VALUE = 100_000000n // 100 UNISXLP
+    await UNISXLP.transfer(staker, STAKE_VALUE);
+    await UNISXLP.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
 
     const current = (await ethers.provider.getBlock('latest')).timestamp;
 
@@ -111,9 +111,9 @@ describe("LPStakingRewards", function () {
     expect(LPStakingRewards.connect(signers.staker).setRewardRate(NEW_REWARD_RATE)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it('Should not allow to stake if USDC balance is not sufficient', async () => {
+  it('Should not allow to stake if UNISXLP balance is not sufficient', async () => {
     const STAKE_VALUE = 1;
-    await USDC.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
+    await UNISXLP.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
     expect(LPStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).to.be.revertedWith('ERC20: transfer amount exceeds balance');
   });
 
@@ -122,10 +122,10 @@ describe("LPStakingRewards", function () {
     await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
 
     /* Stake */
-    const STAKE_VALUE = 100_000000n; // 100 USDC
+    const STAKE_VALUE = 100_000000n; // 100 UNISXLP
 
-    await USDC.transfer(staker, STAKE_VALUE);
-    await USDC.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
+    await UNISXLP.transfer(staker, STAKE_VALUE);
+    await UNISXLP.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
     await (await LPStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).wait();
 
     const stakeStartTime = (await ethers.provider.getBlock('latest')).timestamp;

@@ -4,8 +4,8 @@ pragma solidity ^0.8;
 
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 
-contract MockUSDC is ERC20 {
-  constructor(uint256 _initialSupply) ERC20("USDC", "USDC") {
+contract MockUNISXLP is ERC20 {
+  constructor(uint256 _initialSupply) ERC20("UNISXLP", "UNISXLP") {
     _mint(msg.sender, _initialSupply);
   }
 
