@@ -4,7 +4,7 @@ const { ethers } = require("hardhat");
 describe("LPStakingRewards", function () {
   const REWARD_RATE = 2;
 
-  let admin, staker;
+  let staker;
   let signers;
   let UNISX, UNISXLP, LPStakingRewards;
   let periodFinish;
@@ -19,8 +19,8 @@ describe("LPStakingRewards", function () {
 
     /* Deploy contracts */
     const LPStakingRewardsContract = await ethers.getContractFactory("LPStakingRewards")
-    const UNISXLPContract = await ethers.getContractFactory("MockUNISXLP");
-    const UNISXContract = await ethers.getContractFactory("MockUNISX");
+    const UNISXLPContract = await ethers.getContractFactory("TestLP");
+    const UNISXContract = await ethers.getContractFactory("TestUNISX");
 
     UNISXLP = await UNISXLPContract.deploy(46n * (10n ** (9n + 6n))); // 46 billion max supply
     await UNISXLP.deployed();
@@ -38,7 +38,7 @@ describe("LPStakingRewards", function () {
     await LPStakingRewards.deployed();
   });
 
-  it("Should give reward to staker", async function () {
+  it("Gives reward to staker", async function () {
     /* Give reward token to LPStakingRewards contract */
     await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
 
@@ -71,7 +71,7 @@ describe("LPStakingRewards", function () {
     expect((await UNISXLP.balanceOf(staker)).toString()).to.equal(STAKE_VALUE.toString());
   });
 
-  it("Should not give reward after periodFinish", async () => {
+  it("Doesn't give reward after periodFinish", async () => {
     /* Give reward token to LPStakingRewards contract */
     await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
 
@@ -100,24 +100,24 @@ describe("LPStakingRewards", function () {
     expect(rewardReceived.toString()).to.equal('0');
   });
 
-  it('Owner should be able to change reward', async () => {
+  it("Lets owner to change reward", async () => {
     const NEW_REWARD_RATE = 3;
     await (await LPStakingRewards.setRewardRate(NEW_REWARD_RATE)).wait();
     expect((await LPStakingRewards.rewardRate()).toString()).to.equal(NEW_REWARD_RATE.toString());
   });
 
-  it('Non-owner should not be able to change reward', async () => {
+  it("Doesn't let non-owner to change reward", async () => {
     const NEW_REWARD_RATE = 3;
     expect(LPStakingRewards.connect(signers.staker).setRewardRate(NEW_REWARD_RATE)).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it('Should not allow to stake if UNISXLP balance is not sufficient', async () => {
+  it("Doesn't allow to stake if balance is not sufficient", async () => {
     const STAKE_VALUE = 1;
     await UNISXLP.connect(signers.staker).approve(LPStakingRewards.address, STAKE_VALUE);
     expect(LPStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).to.be.revertedWith('ERC20: transfer amount exceeds balance');
   });
 
-  it('Rewards must change after setRewardRate', async () => {
+  it("Doesn't let rewards change after setRewardRate", async () => {
     /* Give reward token to LPStakingRewards contract */
     await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
 

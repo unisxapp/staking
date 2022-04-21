@@ -6,7 +6,7 @@ describe("UNISXStakingRewards", function () {
 
   let staker;
   let signers;
-  let UNISX, xUNISX, TokenManager, UNISXStakingRewards;
+  let UNISX, xUSX, TokenManager, UNISXStakingRewards;
 
   beforeEach(async () => {
     /* Setup roles */
@@ -17,11 +17,11 @@ describe("UNISXStakingRewards", function () {
     };
 
     /* Deploy contracts */
-    UNISX = await (await ethers.getContractFactory("MockUNISX")).deploy(10n ** (18n + 6n)); // 1 million
+    UNISX = await (await ethers.getContractFactory("TestUNISX")).deploy(10n ** (18n + 6n)); // 1 million
     await UNISX.deployed();
-    TokenManager = await (await ethers.getContractFactory("MockTokenManager")).deploy();
+    TokenManager = await (await ethers.getContractFactory("TestTokenManager")).deploy();
     await TokenManager.deployed();
-    xUNISX = await ethers.getContractAt('MockXUNISX', await TokenManager.xUNISX());
+    xUSX = await ethers.getContractAt("TestXUSX", await TokenManager.xUSX());
     UNISXStakingRewards = await (
       await ethers.getContractFactory("UNISXStakingRewards")
     ).deploy(UNISX.address, TokenManager.address, REWARD_RATE);
@@ -33,8 +33,8 @@ describe("UNISXStakingRewards", function () {
     await TokenManager.grantRole(BURNER_ROLE, UNISXStakingRewards.address);
   });
 
-  it("Should give reward to staker", async function () {
-    /* Give reward token to xUNISX contract */
+  it("Gives reward to staker", async function () {
+    /* Give reward token to xUSX contract */
     await UNISX.transfer(UNISXStakingRewards.address, 500_000n * (10n ** 18n)); // 500,000 UNISX
 
     /* Stake */
@@ -50,7 +50,7 @@ describe("UNISXStakingRewards", function () {
     ).wait();
 
     expect((await UNISX.balanceOf(staker)).toString()).to.equal("0");
-    expect((await xUNISX.balanceOf(staker)).toString()).to.equal(
+    expect((await xUSX.balanceOf(staker)).toString()).to.equal(
       STAKE_VALUE.toString()
     );
 
@@ -79,11 +79,11 @@ describe("UNISXStakingRewards", function () {
     expect((await UNISX.balanceOf(staker)).toString()).to.equal(
       (STAKE_VALUE + BigInt(rewardReceived.toNumber())).toString()
     );
-    expect((await xUNISX.balanceOf(staker)).toString()).to.equal("0");
-    expect((await xUNISX.totalSupply()).toString()).to.equal("0");
+    expect((await xUSX.balanceOf(staker)).toString()).to.equal("0");
+    expect((await xUSX.totalSupply()).toString()).to.equal("0");
   });
 
-  it("Owner should be able to change reward", async () => {
+  it("Lets owner change the reward rate", async () => {
     const NEW_REWARD_RATE = 3;
     await (await UNISXStakingRewards.setRewardRate(NEW_REWARD_RATE)).wait();
     expect((await UNISXStakingRewards.rewardRate()).toString()).to.equal(
@@ -91,22 +91,22 @@ describe("UNISXStakingRewards", function () {
     );
   });
 
-  it("Non-owner should not be able to change reward", async () => {
+  it("Doesn't let non-owner to change the reward rate", async () => {
     const NEW_REWARD_RATE = 3;
     expect(
       UNISXStakingRewards.connect(signers.staker).setRewardRate(NEW_REWARD_RATE)
     ).to.be.revertedWith("Ownable: caller is not the owner");
   });
 
-  it("Should not allow to stake if UNISX balance is not sufficient", async () => {
+  it("Doesn't allow to stake if UNISX balance is not sufficient", async () => {
     const STAKE_VALUE = 1;
-    await UNISX.connect(signers.staker).approve(xUNISX.address, STAKE_VALUE);
+    await UNISX.connect(signers.staker).approve(xUSX.address, STAKE_VALUE);
     expect(
       UNISXStakingRewards.connect(signers.staker).stake(STAKE_VALUE)
     ).to.be.revertedWith("ERC20: transfer amount exceeds balance");
   });
 
-  it("Rewards must change after setRewardRate", async () => {
+  it("Makes rewards change after setRewardRate", async () => {
     /* Give reward token to UNISXStakingRewards contract */
     await UNISX.transfer(UNISXStakingRewards.address, 500_000n * (10n ** 18n)); // 500,000 UNISX
 
@@ -150,7 +150,7 @@ describe("UNISXStakingRewards", function () {
     );
   });
 
-  it("Should not allow reward claim when there are no rewards on the contract", async () => {
+  it("Doesn't not allow reward claim when there are no rewards on the contract", async () => {
     /* Stake */
     const STAKE_VALUE = 10_000000000000000000n;
 
@@ -164,7 +164,7 @@ describe("UNISXStakingRewards", function () {
     ).wait();
 
     expect((await UNISX.balanceOf(staker)).toString()).to.equal("0");
-    expect((await xUNISX.balanceOf(staker)).toString()).to.equal(
+    expect((await xUSX.balanceOf(staker)).toString()).to.equal(
       STAKE_VALUE.toString()
     );
 
@@ -201,7 +201,7 @@ describe("UNISXStakingRewards", function () {
     expect((await UNISX.balanceOf(staker)).toString()).to.equal(
       (STAKE_VALUE + REWARD_RATE * TIME).toString()
     );
-    expect((await xUNISX.balanceOf(staker)).toString()).to.equal("0");
-    expect((await xUNISX.totalSupply()).toString()).to.equal("0");
+    expect((await xUSX.balanceOf(staker)).toString()).to.equal("0");
+    expect((await xUSX.totalSupply()).toString()).to.equal("0");
   });
 });

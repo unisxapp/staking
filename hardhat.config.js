@@ -1,13 +1,14 @@
 require("@nomiclabs/hardhat-ethers");
 require("@nomiclabs/hardhat-etherscan");
 require("@nomiclabs/hardhat-waffle");
+require("dotenv").config();
 
 const { 
-  infura_project_id,
-  mainnet_pk,
-  rinkeby_mnemonic,
-  etherscan_api_key
-} = require('./secrets.json');
+  MAINNET_URL,
+  RINKEBY_URL,
+  PK,
+  ETHERSCAN_API,
+} = process.env;
 
 module.exports = {
   solidity: {
@@ -25,22 +26,22 @@ module.exports = {
   networks: {
     mainnet: {
       chainId: 1,
-      url: 'https://mainnet.infura.io/v3/' + infura_project_id,
-      accounts: [mainnet_pk],
+      url: MAINNET_URL,
+      accounts: [PK],
     },
     rinkeby: {
-      url: 'https://rinkeby.infura.io/v3/' + infura_project_id,
-      accounts: [rinkeby_mnemonic],
+      url: RINKEBY_URL,
+      accounts: [PK],
     },
     hardhat: {
       forking: {
         chainId: 1,
-        url: 'https://mainnet.infura.io/v3/' + infura_project_id,
+        url: MAINNET_URL,
         timeout: 0,
       },
     },
   },
   etherscan: {
-    apiKey: etherscan_api_key,
+    apiKey: ETHERSCAN_API,
   }
 };

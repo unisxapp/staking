@@ -5,10 +5,10 @@ pragma solidity ^0.8;
 import "@openzeppelin/contracts/token/ERC20/ERC20.sol";
 import "../interfaces/ITokenManagerMin.sol";
 
-contract MockXUNISX is ITokenManagerMin, ERC20 {
+contract TestXUSX is ITokenManagerMin, ERC20 {
   address public tokenManager;
 
-  constructor(address _tokenManager) ERC20("xUNISX", "xUNISX") {
+  constructor(address _tokenManager) ERC20("xUniSX", "xUSX") {
     tokenManager = _tokenManager;
   }
 

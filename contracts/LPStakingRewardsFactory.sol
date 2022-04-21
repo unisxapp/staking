@@ -2,7 +2,6 @@
 
 pragma solidity ^0.8;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
 import "./LPStakingRewards.sol";
 
 contract LPStakingRewardsFactory is Ownable {

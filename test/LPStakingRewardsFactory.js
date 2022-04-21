@@ -16,8 +16,8 @@ describe("LPStakingRewardsFactory", function () {
 
     /* Deploy contracts */
     const LPStakingRewardsFactoryContract = await ethers.getContractFactory("LPStakingRewardsFactory")
-    const UNISXLPContract = await ethers.getContractFactory("MockUNISXLP");
-    const UNISXContract = await ethers.getContractFactory("MockUNISX");
+    const UNISXLPContract = await ethers.getContractFactory("TestLP");
+    const UNISXContract = await ethers.getContractFactory("TestUNISX");
 
     UNISXLP = await UNISXLPContract.deploy(1000)
     await UNISXLP.deployed()
@@ -28,7 +28,7 @@ describe("LPStakingRewardsFactory", function () {
     await LPStakingRewardsFactory.deployed()
   });
 
-  it("Should createLPStakingRewards", async function () {
+  it("Successfully executes createLPStakingRewards", async function () {
     await (await LPStakingRewardsFactory.createLPStakingRewards(
       UNISXLP.address,
       UNISX.address,
@@ -41,7 +41,7 @@ describe("LPStakingRewardsFactory", function () {
     );
   });
 
-  it("Should transfer ownership to creator", async function () {
+  it("Transfers ownership to creator", async function () {
     await (await LPStakingRewardsFactory.createLPStakingRewards(
       UNISXLP.address,
       UNISX.address,
@@ -56,7 +56,7 @@ describe("LPStakingRewardsFactory", function () {
     await stakingRewards.setRewardRate(0);
   });
 
-  it("Should not be able to createLPStakingRewards if not an owner", async function () {
+  it("Doesn't allow to createLPStakingRewards if not an owner", async function () {
     expect(LPStakingRewardsFactory.connect(signers.staker).createLPStakingRewards(
       UNISXLP.address,
       UNISX.address,
@@ -65,7 +65,7 @@ describe("LPStakingRewardsFactory", function () {
     )).to.be.revertedWith('Ownable: caller is not the owner');
   });
 
-  it("Should allow to create a new LPStakingRewards contract after periodFinish has passed", async () => {
+  it("Allows to create a new LPStakingRewards contract after periodFinish has passed", async () => {
     const currentTimestamp = BigInt((await ethers.provider.getBlock("latest")).timestamp);
     const TIME0 = 500n;
     const TIME1 = 500n;

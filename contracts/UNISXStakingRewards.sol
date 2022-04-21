@@ -4,7 +4,7 @@
 
 pragma solidity ^0.8;
 
-import "@openzeppelin/contracts/access/Ownable.sol";
+import "./OpenZeppelin/Ownable.sol";
 import "./interfaces/IERC20Min.sol";
 import "./interfaces/ITokenManagerMin.sol";
 
