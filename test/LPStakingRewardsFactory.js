@@ -2,7 +2,7 @@ const { expect } = require("chai");
 const { ethers } = require("hardhat");
 
 describe("LPStakingRewardsFactory", function () {
-  let admin, staker;
+  let admin;
   let signers;
   let UNISX, UNISXLP, LPStakingRewardsFactory;
 
