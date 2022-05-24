@@ -18,6 +18,7 @@ contract LPStakingRewardsFactory is Ownable {
     function createLPStakingRewards(
         address _stakingToken,
         address _rewardsToken,
+        address _treasuryAddress,
         uint256 _rewardRate,
         uint256 _periodFinish
     ) external onlyOwner {
@@ -32,6 +33,7 @@ contract LPStakingRewardsFactory is Ownable {
         LPStakingRewards rewards = new LPStakingRewards(
             _stakingToken,
             _rewardsToken,
+            _treasuryAddress,
             _rewardRate,
             _periodFinish
         );

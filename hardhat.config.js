@@ -33,6 +33,10 @@ module.exports = {
       url: RINKEBY_URL,
       accounts: [PK],
     },
+    kovan: {
+      url: KOVAN_URL,
+      accounts: [PK],
+    },
     hardhat: {
       forking: {
         chainId: 1,

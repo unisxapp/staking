@@ -10,6 +10,7 @@ import "./interfaces/ITokenManagerMin.sol";
 
 contract UNISXStakingRewards is Ownable {
     IERC20Min public immutable UNISXToken;
+    address public immutable treasuryAddress;
     ITokenManagerMin public immutable xUNISXTokenManager;
 
     uint256 public rewardRate;
@@ -24,10 +25,12 @@ contract UNISXStakingRewards is Ownable {
 
     constructor(
         address _UNISXToken,
+        address _treasuryAddress,
         address _tokenManager,
         uint256 _rewardRate
     ) {
         UNISXToken = IERC20Min(_UNISXToken);
+        treasuryAddress = _treasuryAddress;
         xUNISXTokenManager = ITokenManagerMin(_tokenManager);
         rewardRate = _rewardRate;
     }
@@ -90,7 +93,7 @@ contract UNISXStakingRewards is Ownable {
     function getReward() external updateReward(msg.sender) returns (uint256) {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
-        UNISXToken.transfer(msg.sender, reward);
+        UNISXToken.transferFrom(treasuryAddress, msg.sender, reward);
         require(
             UNISXToken.balanceOf(address(this)) >= _totalSupply,
             "out of reward"

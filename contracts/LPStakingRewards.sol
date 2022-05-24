@@ -10,6 +10,7 @@ import "./interfaces/IERC20Min.sol";
 contract LPStakingRewards is Ownable {
     IERC20Min public immutable stakingToken;
     IERC20Min public immutable rewardsToken;
+    address public immutable treasuryAddress;
     uint256 public immutable periodFinish;
 
     uint256 public rewardRate;
@@ -25,11 +26,13 @@ contract LPStakingRewards is Ownable {
     constructor(
         address _stakingToken,
         address _rewardsToken,
+        address _treasuryAddress,
         uint256 _rewardRate,
         uint256 _periodFinish
     ) {
         stakingToken = IERC20Min(_stakingToken);
         rewardsToken = IERC20Min(_rewardsToken);
+        treasuryAddress = _treasuryAddress;
         rewardRate = _rewardRate;
         periodFinish = _periodFinish;
     }
@@ -95,7 +98,7 @@ contract LPStakingRewards is Ownable {
     function getReward() external updateReward(msg.sender) returns (uint256) {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
-        rewardsToken.transfer(msg.sender, reward);
+        rewardsToken.transferFrom(treasuryAddress, msg.sender, reward);
         require(
             stakingToken.balanceOf(address(this)) >= _totalSupply,
             "out of reward"
