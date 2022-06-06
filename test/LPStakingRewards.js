@@ -5,16 +5,18 @@ describe("LPStakingRewards", function () {
   const REWARD_RATE = 2;
 
   let staker;
+  let treasury;
   let signers;
   let UNISX, UNISXLP, LPStakingRewards;
   let periodFinish;
 
   beforeEach(async () => {
     /* Setup roles */
-    [admin, staker] = await ethers.provider.listAccounts();
+    [admin, staker, treasury] = await ethers.provider.listAccounts();
     signers = {
       admin: ethers.provider.getSigner(0),
       staker: ethers.provider.getSigner(1),
+      treasury: ethers.provider.getSigner(2),
     };
 
     /* Deploy contracts */
@@ -24,24 +26,28 @@ describe("LPStakingRewards", function () {
 
     UNISXLP = await UNISXLPContract.deploy(46n * (10n ** (9n + 6n))); // 46 billion max supply
     await UNISXLP.deployed();
-    UNISX = await UNISXContract.deploy(10n ** (6n + 18n)); // 1 million max supply
+    UNISX = await UNISXContract.deploy(10n ** (7n + 18n)); // 10 million max supply
     await UNISX.deployed();
 
     periodFinish = (await ethers.provider.getBlock('latest')).timestamp + 2000;
 
     LPStakingRewards = await LPStakingRewardsContract.deploy(
+      treasury,
       UNISXLP.address,
       UNISX.address,
       REWARD_RATE,
       periodFinish,
     );
     await LPStakingRewards.deployed();
+
+    /* Give reward token to treasury contract */
+    await UNISX.transfer(treasury, 1_000_000n * (10n ** 18n)); // 1,000,000 UNISX
+
+    /* Give full allowance to staking contract */
+    await UNISX.connect(signers.treasury).approve(LPStakingRewards.address, ethers.constants.MaxUint256);
   });
 
   it("Gives reward to staker", async function () {
-    /* Give reward token to LPStakingRewards contract */
-    await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
-
     /* Stake */
     const STAKE_VALUE = 100_000000n // 100 UNISXLP
 
@@ -72,9 +78,6 @@ describe("LPStakingRewards", function () {
   });
 
   it("Doesn't give reward after periodFinish", async () => {
-    /* Give reward token to LPStakingRewards contract */
-    await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
-
     /* Give balance and approve */
     const STAKE_VALUE = 100_000000n // 100 UNISXLP
     await UNISXLP.transfer(staker, STAKE_VALUE);
@@ -117,10 +120,7 @@ describe("LPStakingRewards", function () {
     expect(LPStakingRewards.connect(signers.staker).stake(STAKE_VALUE)).to.be.revertedWith('ERC20: transfer amount exceeds balance');
   });
 
-  it("Doesn't let rewards change after setRewardRate", async () => {
-    /* Give reward token to LPStakingRewards contract */
-    await UNISX.transfer(LPStakingRewards.address, 500_000n * (10n ** 18n)) // 500,000 UNISX
-
+  it("Correctly changes rate on setRewardRate", async () => {
     /* Stake */
     const STAKE_VALUE = 100_000000n; // 100 UNISXLP
 

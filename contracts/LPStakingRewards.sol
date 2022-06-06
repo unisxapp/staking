@@ -8,9 +8,9 @@ import "./OpenZeppelin/Ownable.sol";
 import "./interfaces/IERC20Min.sol";
 
 contract LPStakingRewards is Ownable {
+    address public immutable treasuryAddress;
     IERC20Min public immutable stakingToken;
     IERC20Min public immutable rewardsToken;
-    address public immutable treasuryAddress;
     uint256 public immutable periodFinish;
 
     uint256 public rewardRate;
@@ -24,15 +24,15 @@ contract LPStakingRewards is Ownable {
     mapping(address => uint256) private _balances;
 
     constructor(
+        address _treasuryAddress,
         address _stakingToken,
         address _rewardsToken,
-        address _treasuryAddress,
         uint256 _rewardRate,
         uint256 _periodFinish
     ) {
+        treasuryAddress = _treasuryAddress;
         stakingToken = IERC20Min(_stakingToken);
         rewardsToken = IERC20Min(_rewardsToken);
-        treasuryAddress = _treasuryAddress;
         rewardRate = _rewardRate;
         periodFinish = _periodFinish;
     }

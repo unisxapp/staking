@@ -4,14 +4,16 @@ const { ethers } = require("hardhat");
 describe("LPStakingRewardsFactory", function () {
   let admin;
   let signers;
+  let treasury;
   let UNISX, UNISXLP, LPStakingRewardsFactory;
 
   beforeEach(async () => {
     /* Setup roles */
-    [admin, staker] = await ethers.provider.listAccounts()
+    [admin, staker, treasury] = await ethers.provider.listAccounts()
     signers = {
       admin: ethers.provider.getSigner(0),
       staker: ethers.provider.getSigner(1),
+      treasury: ethers.provider.getSigner(2),
     }
 
     /* Deploy contracts */
@@ -21,7 +23,7 @@ describe("LPStakingRewardsFactory", function () {
 
     UNISXLP = await UNISXLPContract.deploy(1000)
     await UNISXLP.deployed()
-    UNISX = await UNISXContract.deploy(1000)
+    UNISX = await UNISXContract.deploy(10n ** (18n + 7n)) // 10,000,000
     await UNISX.deployed()
 
     LPStakingRewardsFactory = await LPStakingRewardsFactoryContract.deploy()
@@ -30,6 +32,7 @@ describe("LPStakingRewardsFactory", function () {
 
   it("Successfully executes createLPStakingRewards", async function () {
     await (await LPStakingRewardsFactory.createLPStakingRewards(
+      treasury,
       UNISXLP.address,
       UNISX.address,
       1,
@@ -43,6 +46,7 @@ describe("LPStakingRewardsFactory", function () {
 
   it("Transfers ownership to creator", async function () {
     await (await LPStakingRewardsFactory.createLPStakingRewards(
+      treasury,
       UNISXLP.address,
       UNISX.address,
       1,
@@ -58,6 +62,7 @@ describe("LPStakingRewardsFactory", function () {
 
   it("Doesn't allow to createLPStakingRewards if not an owner", async function () {
     expect(LPStakingRewardsFactory.connect(signers.staker).createLPStakingRewards(
+      treasury,
       UNISXLP.address,
       UNISX.address,
       1,
@@ -76,6 +81,7 @@ describe("LPStakingRewardsFactory", function () {
     );
 
     await (await LPStakingRewardsFactory.createLPStakingRewards(
+      treasury,
       UNISXLP.address,
       UNISX.address,
       1n,
@@ -92,6 +98,7 @@ describe("LPStakingRewardsFactory", function () {
     expect(periodFinish).to.equal((currentTimestamp + TIME0 + TIME1).toString());
 
     await expect(LPStakingRewardsFactory.createLPStakingRewards(
+      treasury,
       UNISXLP.address,
       UNISX.address,
       1n,
@@ -101,6 +108,7 @@ describe("LPStakingRewardsFactory", function () {
     await ethers.provider.send("evm_increaseTime", [Number(TIME0)]);
     await ethers.provider.send("evm_mine");
     await expect(LPStakingRewardsFactory.createLPStakingRewards(
+      treasury,
       UNISXLP.address, 
       UNISX.address, 
       1n,
@@ -109,6 +117,7 @@ describe("LPStakingRewardsFactory", function () {
     await ethers.provider.send("evm_increaseTime", [Number(TIME1)]);
     await ethers.provider.send("evm_mine");
     await (await LPStakingRewardsFactory.createLPStakingRewards(
+      treasury,
       UNISXLP.address,
       UNISX.address,
       1,

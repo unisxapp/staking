@@ -24,13 +24,13 @@ contract UNISXStakingRewards is Ownable {
     mapping(address => uint256) private _balances;
 
     constructor(
-        address _UNISXToken,
         address _treasuryAddress,
+        address _UNISXToken,
         address _tokenManager,
         uint256 _rewardRate
     ) {
-        UNISXToken = IERC20Min(_UNISXToken);
         treasuryAddress = _treasuryAddress;
+        UNISXToken = IERC20Min(_UNISXToken);
         xUNISXTokenManager = ITokenManagerMin(_tokenManager);
         rewardRate = _rewardRate;
     }
@@ -94,10 +94,6 @@ contract UNISXStakingRewards is Ownable {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
         UNISXToken.transferFrom(treasuryAddress, msg.sender, reward);
-        require(
-            UNISXToken.balanceOf(address(this)) >= _totalSupply,
-            "out of reward"
-        );
         emit RewardPaid(msg.sender, reward);
         return reward;
     }
