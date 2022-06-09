@@ -24,9 +24,12 @@ async function deploy() {
   console.log("UNISXStakingRewards successfully deployed at", UNISXStakingRewards.address, "with tx", UNISXStakingRewards.deployTransaction.hash);
 
   const LPStakingRewardsFactoryContract = await ethers.getContractFactory("LPStakingRewardsFactory")
-  const LPStakingRewardsFactory = await LPStakingRewardsFactoryContract.deploy({
+  const LPStakingRewardsFactory = await LPStakingRewardsFactoryContract.deploy(
+    process.env.TREASURY,
+    {
     gasPrice: BigInt(process.env.GAS_PRICE_GWEI) * (10n ** 9n),
-  });
+    },
+  );
   await LPStakingRewardsFactory.deployed()
   console.log('LPStakingRewardsFactory address deployed at', LPStakingRewardsFactory.address, 'with tx', LPStakingRewardsFactory.deployTransaction.hash);
 }

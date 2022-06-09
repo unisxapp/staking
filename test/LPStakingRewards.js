@@ -5,34 +5,35 @@ describe("LPStakingRewards", function () {
   const REWARD_RATE = 2;
 
   let staker;
-  let treasury;
   let signers;
-  let UNISX, UNISXLP, LPStakingRewards;
+  let UNISX, UNISXLP, LPStakingRewards, Treasury;
   let periodFinish;
 
   beforeEach(async () => {
     /* Setup roles */
-    [admin, staker, treasury] = await ethers.provider.listAccounts();
+    [admin, staker] = await ethers.provider.listAccounts();
     signers = {
       admin: ethers.provider.getSigner(0),
       staker: ethers.provider.getSigner(1),
-      treasury: ethers.provider.getSigner(2),
     };
 
     /* Deploy contracts */
     const LPStakingRewardsContract = await ethers.getContractFactory("LPStakingRewards")
     const UNISXLPContract = await ethers.getContractFactory("TestLP");
     const UNISXContract = await ethers.getContractFactory("TestUNISX");
+    const TestTreasuryContract = await ethers.getContractFactory("TestTreasury");
 
     UNISXLP = await UNISXLPContract.deploy(46n * (10n ** (9n + 6n))); // 46 billion max supply
     await UNISXLP.deployed();
     UNISX = await UNISXContract.deploy(10n ** (7n + 18n)); // 10 million max supply
     await UNISX.deployed();
+    Treasury = await TestTreasuryContract.deploy();
+    await Treasury.deployed();
 
     periodFinish = (await ethers.provider.getBlock('latest')).timestamp + 2000;
 
     LPStakingRewards = await LPStakingRewardsContract.deploy(
-      treasury,
+      Treasury.address,
       UNISXLP.address,
       UNISX.address,
       REWARD_RATE,
@@ -41,10 +42,7 @@ describe("LPStakingRewards", function () {
     await LPStakingRewards.deployed();
 
     /* Give reward token to treasury contract */
-    await UNISX.transfer(treasury, 1_000_000n * (10n ** 18n)); // 1,000,000 UNISX
-
-    /* Give full allowance to staking contract */
-    await UNISX.connect(signers.treasury).approve(LPStakingRewards.address, ethers.constants.MaxUint256);
+    await UNISX.transfer(Treasury.address, 1_000_000n * (10n ** 18n)); // 1,000,000 UNISX
   });
 
   it("Gives reward to staker", async function () {

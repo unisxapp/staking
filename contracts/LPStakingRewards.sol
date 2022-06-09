@@ -6,11 +6,12 @@ pragma solidity ^0.8;
 
 import "./OpenZeppelin/Ownable.sol";
 import "./interfaces/IERC20Min.sol";
+import "./interfaces/IVaultMin.sol";
 
 contract LPStakingRewards is Ownable {
-    address public immutable treasuryAddress;
+    IVaultMin public immutable treasury;
     IERC20Min public immutable stakingToken;
-    IERC20Min public immutable rewardsToken;
+    address public immutable rewardsToken;
     uint256 public immutable periodFinish;
 
     uint256 public rewardRate;
@@ -30,9 +31,9 @@ contract LPStakingRewards is Ownable {
         uint256 _rewardRate,
         uint256 _periodFinish
     ) {
-        treasuryAddress = _treasuryAddress;
+        treasury = IVaultMin(_treasuryAddress);
         stakingToken = IERC20Min(_stakingToken);
-        rewardsToken = IERC20Min(_rewardsToken);
+        rewardsToken = _rewardsToken;
         rewardRate = _rewardRate;
         periodFinish = _periodFinish;
     }
@@ -98,7 +99,7 @@ contract LPStakingRewards is Ownable {
     function getReward() external updateReward(msg.sender) returns (uint256) {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
-        rewardsToken.transferFrom(treasuryAddress, msg.sender, reward);
+        treasury.transfer(rewardsToken, msg.sender, reward);
         emit RewardPaid(msg.sender, reward);
         return reward;
     }

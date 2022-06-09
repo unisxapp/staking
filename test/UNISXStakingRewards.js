@@ -5,17 +5,15 @@ describe("UNISXStakingRewards", function () {
   const REWARD_RATE = 2n;
 
   let staker;
-  let treasury;
   let signers;
-  let UNISX, xUSX, TokenManager, UNISXStakingRewards;
+  let UNISX, xUSX, TokenManager, UNISXStakingRewards, Treasury;
 
   beforeEach(async () => {
     /* Setup roles */
-    [admin, staker, treasury] = await ethers.provider.listAccounts();
+    [admin, staker] = await ethers.provider.listAccounts();
     signers = {
       admin: ethers.provider.getSigner(0),
       staker: ethers.provider.getSigner(1),
-      treasury: ethers.provider.getSigner(2),
     };
 
     /* Deploy contracts */
@@ -24,10 +22,12 @@ describe("UNISXStakingRewards", function () {
     TokenManager = await (await ethers.getContractFactory("TestTokenManager")).deploy();
     await TokenManager.deployed();
     xUSX = await ethers.getContractAt("TestXUSX", await TokenManager.xUSX());
+    Treasury = await (await ethers.getContractFactory("TestTreasury")).deploy();
+    await Treasury.deployed();
     UNISXStakingRewards = await (
       await ethers.getContractFactory("UNISXStakingRewards")
     ).deploy(
-      treasury,
+      Treasury.address,
       UNISX.address, 
       TokenManager.address, 
       REWARD_RATE
@@ -40,10 +40,7 @@ describe("UNISXStakingRewards", function () {
     await TokenManager.grantRole(BURNER_ROLE, UNISXStakingRewards.address);
 
     /* Give reward token to treasury contract */
-    await UNISX.transfer(treasury, 1_000_000n * (10n ** 18n)); // 1,000,000 UNISX
-
-    /* Give full allowance to staking contract */
-    await UNISX.connect(signers.treasury).approve(UNISXStakingRewards.address, ethers.constants.MaxUint256);
+    await UNISX.transfer(Treasury.address, 1_000_000n * (10n ** 18n)); // 1,000,000 UNISX
   });
 
   it("Gives reward to staker", async function () {
@@ -160,9 +157,9 @@ describe("UNISXStakingRewards", function () {
     );
   });
 
-  it("Doesn't not allow reward claim when there are no rewards in the treasury", async () => {
-    const treasuryBalance = await UNISX.balanceOf(treasury);
-    await UNISX.connect(signers.treasury).transfer(admin, treasuryBalance);
+  it("Doesn't not allow reward claim when there are no rewards in the Treasury.address", async () => {
+    const treasuryBalance = await UNISX.balanceOf(Treasury.address);
+    await Treasury.transfer(UNISX.address, admin, treasuryBalance);
 
     /* Stake */
     const STAKE_VALUE = 10n * 18n;
@@ -192,7 +189,7 @@ describe("UNISXStakingRewards", function () {
     ).to.be.reverted;
 
     /* Give reward token to UNISXStakingRewards contract */
-    await UNISX.transfer(treasury, 1_000_000n);
+    await UNISX.transfer(Treasury.address, 1_000_000n);
 
     /* Succeed to get reward */
     await (

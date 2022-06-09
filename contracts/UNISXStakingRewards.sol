@@ -7,10 +7,11 @@ pragma solidity ^0.8;
 import "./OpenZeppelin/Ownable.sol";
 import "./interfaces/IERC20Min.sol";
 import "./interfaces/ITokenManagerMin.sol";
+import "./interfaces/IVaultMin.sol";
 
 contract UNISXStakingRewards is Ownable {
+    IVaultMin public immutable treasury;
     IERC20Min public immutable UNISXToken;
-    address public immutable treasuryAddress;
     ITokenManagerMin public immutable xUNISXTokenManager;
 
     uint256 public rewardRate;
@@ -29,7 +30,7 @@ contract UNISXStakingRewards is Ownable {
         address _tokenManager,
         uint256 _rewardRate
     ) {
-        treasuryAddress = _treasuryAddress;
+        treasury = IVaultMin(_treasuryAddress);
         UNISXToken = IERC20Min(_UNISXToken);
         xUNISXTokenManager = ITokenManagerMin(_tokenManager);
         rewardRate = _rewardRate;
@@ -93,7 +94,7 @@ contract UNISXStakingRewards is Ownable {
     function getReward() external updateReward(msg.sender) returns (uint256) {
         uint256 reward = rewards[msg.sender];
         rewards[msg.sender] = 0;
-        UNISXToken.transferFrom(treasuryAddress, msg.sender, reward);
+        treasury.transfer(address(UNISXToken), msg.sender, reward);
         emit RewardPaid(msg.sender, reward);
         return reward;
     }

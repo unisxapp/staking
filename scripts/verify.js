@@ -16,7 +16,7 @@ async function main() {
     });
     await run('verify:verify', {
         address: process.env.DEPLOYED_STAKING_FACTORY,
-        constructorArguments: [],
+        constructorArguments: [process.env.TREASURY],
     });
 }
 

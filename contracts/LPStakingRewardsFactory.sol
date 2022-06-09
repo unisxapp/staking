@@ -5,6 +5,7 @@ pragma solidity ^0.8;
 import "./LPStakingRewards.sol";
 
 contract LPStakingRewardsFactory is Ownable {
+    address public immutable treasuryAddress;
     mapping(address => address) public stakingRewards;
 
     event LPStakingRewardsCreated(
@@ -15,8 +16,11 @@ contract LPStakingRewardsFactory is Ownable {
         uint256 periodFinish
     );
 
+    constructor(address _treasuryAddress) {
+        treasuryAddress = _treasuryAddress;
+    }
+
     function createLPStakingRewards(
-        address _treasuryAddress,
         address _stakingToken,
         address _rewardsToken,
         uint256 _rewardRate,
@@ -31,7 +35,7 @@ contract LPStakingRewardsFactory is Ownable {
         );
 
         LPStakingRewards rewards = new LPStakingRewards(
-            _treasuryAddress,
+            treasuryAddress,
             _stakingToken,
             _rewardsToken,
             _rewardRate,
